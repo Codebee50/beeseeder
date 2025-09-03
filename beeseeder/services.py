@@ -3,10 +3,10 @@ from beeseeder.utils import ModelItem
 
 
 def order_models_by_dependency(model_items: list[ModelItem]):
-
+    #TODO: check if there is a way to optimize this function
+    
     # ordered model items
-    omi = OrderedDict()
-
+    omi = OrderedDict() 
     def enforce_order(sub_model_items: list[ModelItem]):
         for model_item in sub_model_items:
 

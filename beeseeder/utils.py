@@ -1,4 +1,5 @@
 from django.db.models import fields
+from django.conf import settings
 
 class ModelItem:
     def __init__(self, model):
@@ -24,10 +25,6 @@ class ModelItem:
             if not field.concrete:
                 continue
             
-             # Skip fields from built-in Django apps
-            if field.model._meta.app_label in ['admin', 'auth', 'contenttypes', 'sessions', 'messages', 'staticfiles', 'sites']:
-                continue
-
             field_info = {
                 "type": field.get_internal_type(),
                 "is_relation": field.is_relation,
@@ -56,17 +53,18 @@ class ModelItem:
                 field_info["help_text"] = field.help_text
 
             if field.is_relation:
+                if field.related_model._meta.app_label in settings.SEED_APPS:
+                    related_model_name = (
+                        f"{field.related_model._meta.app_label}.{field.related_model.__name__}"
+                        if field.related_model
+                        else None
+                    )  # produces something like 'auth.User'
 
-                related_model_name = (
-                    f"{field.related_model._meta.app_label}.{field.related_model.__name__}"
-                    if field.related_model
-                    else None
-                )  # produces something like 'auth.User'
+                    if related_model_name not in self.related_model_names:
+                        self.related_model_names.append(related_model_name)
 
-                if related_model_name not in self.related_model_names:
-                    self.related_model_names.append(related_model_name)
+                    field_info["related_model"] = related_model_name
 
-                field_info["related_model"] = related_model_name
-
+            
             schema["fields"].append(field_info)
         return schema
