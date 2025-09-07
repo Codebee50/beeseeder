@@ -41,14 +41,22 @@ class ModelItem:
                 field_info["blank"] = field.blank
             if hasattr(field, "unique"):
                 field_info["unique"] = field.unique
+            
+            
             if hasattr(field, "choices"):
                 if field.choices is not None and field.choices != fields.NOT_PROVIDED:
 
                     field_info["choices"] = field.choices[:10]
+            
             if hasattr(field, "default"):
                 default_value = field.default
                 if default_value is not None and default_value != fields.NOT_PROVIDED:
-                    field_info["default"] = default_value
+                    if callable(default_value):
+                        default_value = default_value()
+                        field_info["default"] = default_value
+                    else:
+                        field_info["default"] = default_value
+            
             if hasattr(field, "help_text"):
                 field_info["help_text"] = field.help_text
 

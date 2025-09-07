@@ -2,22 +2,38 @@ from beeseeder.utils import ModelItem
 import anthropic
 from django.conf import settings
 import json
+import requests
 
 class DataGenerator:
+    BASE_API_URL = "http://localhost:8000"
     def __init__(self, model_items: list[ModelItem]) -> None:
         self.model_items = model_items
     
     
-    def generate(self):
+    def generate(self): 
+        input_data = [model_item.model_schema for model_item in self.model_items]
+       
+        json_data = json.dumps(input_data, default=str)
+        
+        response = requests.post( f"{self.BASE_API_URL}/generator/generate/", json={
+            "tables": json.loads(json_data)
+        })
+        if response.status_code == 200:
+            response_data = response.json()
+            print('Data generation initiated successfully, job_id:', response_data.get('data', {}).get("job_id"))
+        else:
+            print("Error generating data", response.text)
+
+        
         independent_models = [] #models that dont have any foreign key relationships
         dependent_models = [] #models that have foreign key pointing to other models  
-        for model_item in self.model_items:
-            if len(model_item.related_model_names) == 0:
-                independent_models.append(model_item)
-            else:
-                dependent_models.append(model_item)
+        # for model_item in self.model_items:
+        #     if len(model_item.related_model_names) == 0:
+        #         independent_models.append(model_item)
+        #     else:
+        #         dependent_models.append(model_item)
                 
-        self.generate_independent_models_data(independent_models)
+        # self.generate_independent_models_data(independent_models)
     
     def generate_independent_models_data(self, model_items: list[ModelItem]):
         print("Preparing prompt for independent models data")
@@ -92,19 +108,21 @@ class DataGenerator:
         input_data = [model_item.model_schema for model_item in model_items]
         
         print("Sending request to Claude")
-        response = client.messages.create(
-            model=model,
-            max_tokens=10000,
-            system=system_prompt,
-            messages=[
-                {
-                    "role": "user",
-                    "content": json.dumps(input_data)
-                }
-            ]
-        )
-        response_text = response.content[0].text.replace("```json", "").replace("```", "")
-        print(response_text)
-        json_data = json.loads(response_text)
+        print(json.dumps(input_data))
+        
+        # response = client.messages.create(
+        #     model=model,
+        #     max_tokens=10000,
+        #     system=system_prompt,
+        #     messages=[
+        #         {
+        #             "role": "user",
+        #             "content": json.dumps(input_data)
+        #         }
+        #     ]
+        # )
+        # response_text = response.content[0].text.replace("```json", "").replace("```", "")
+        # print(response_text)
+        # json_data = json.loads(response_text)
                 
                 

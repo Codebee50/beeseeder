@@ -8,20 +8,21 @@ from django.conf import settings
 SEED_APPS = settings.SEED_APPS
 
 
-ASCII_ART = """
- ____  _____ _____ 
-| __ )| ____| ____|
-|  _ \|  _| |  _|  
-| |_) | |___| |___ 
-|____/|_____|_____|
-                                          
+ASCII_ART = r"""
+   ____  U _____ uU _____ u 
+U | __")u\| ___"|/\| ___"|/ 
+ \|  _ \/ |  _|"   |  _|"   
+  | |_) | | |___   | |___   
+  |____/  |_____|  |_____|  
+ _|| \\_  <<   >>  <<   >>  
+(__) (__)(__) (__)(__) (__)                            
 """
 
 
 class Command(BaseCommand):
     def handle(self, *args, **options) -> str | None:
         print(ASCII_ART)
-        print('"Seeding the database for you..')
+        print('🐝 Sit back and relax while I seed the database for you..')
         model_items = []
         all_models = apps.get_models()
         for model in all_models:
@@ -29,13 +30,11 @@ class Command(BaseCommand):
                 model_item = ModelItem(model)
                 model_items.append(model_item)
 
-                print(model_item.model_name, model_item.related_model_names)
+                # print(model_item.model_name, model_item.related_model_names)
 
-        print("===================================", end="\n\n")
         ordered_model_items = order_models_by_dependency(model_items)
-        
-        # for model_item in ordered_model_items:
-        #     print(model_item.model_schema, end="\n\n")
-        
+            
         generator = DataGenerator(ordered_model_items)
         generator.generate()
+        
+        
